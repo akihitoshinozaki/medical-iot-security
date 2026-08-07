@@ -31,6 +31,15 @@ Dashboard
 - Aki — Data, ML, anomaly detection, alert logic
 - Toma — Attack simulation and validation
 
+## Planning
+
+Progress is tracked per person in [docs/planning](docs/planning) — one file
+each, edited by its owner.
+
+Internal discussion (concerns, opinions, direction after v1) lives in the team
+Google Doc, shared privately between the three of us. This repo is public, so
+keep anything sensitive out of it.
+
 ## V1
 
 1. ESP32 generates realistic medical-device network traffic
