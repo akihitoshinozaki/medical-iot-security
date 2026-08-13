@@ -37,6 +37,9 @@ preference:
    firmware written here transfers to real hardware unchanged, which is why
    it's first choice. Open question: whether outbound network calls work on
    the free tier.
+   **Status:** first slice done in [`device/wokwi/`](wokwi) — simulated
+   sensor over I2C, ESP32 estimates BPM, prints over Serial. No network leg
+   yet; that's added once the protocol/destination below are decided.
 2. **Script emulator** (`device/simulator/`) — generates plausible readings
    (random walk, 60-100 bpm, with noise) and sends them on the contract's
    interval. Not real firmware, but no external dependencies and it unblocks

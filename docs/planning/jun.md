@@ -26,14 +26,18 @@ my work in two:
       interchangeable — everything else depends on it.*
 - [ ] Confirm Aki has a receiving server up, so packets actually cross a
       network and are capturable.
-- [ ] Build the simulated device. Trying in this order:
-  - [ ] **Wokwi** (wokwi.com) — online ESP32 simulator with a MAX30102 part.
-        Firmware written here carries over to real hardware unchanged. Need to
-        check whether outbound network calls work on the free tier.
-  - [ ] **Fallback: script emulator** in `device/simulator/` — generates
-        plausible readings (random walk, 60-100 bpm, with noise) and sends
-        them on the contract's interval. Less real, but unblocks Aki with no
-        external dependencies.
+- [x] Build the simulated device — started with **Wokwi**
+      (wokwi.com), in [`device/wokwi/`](../../device/wokwi). Sensor is a
+      stub custom chip (not a real MAX30102 register emulation — Wokwi has
+      no built-in one), producing a 2-byte IR reading over I2C that dips
+      once per simulated heartbeat. ESP32 firmware reads it, estimates BPM,
+      prints over Serial. **No network yet** — that's the next slice, once
+      the protocol/destination below are decided.
+      - [ ] Still need to check whether Wokwi's free tier allows outbound
+            network calls from the simulated device — if not, fall back to
+            a script emulator in `device/simulator/` instead.
+- [ ] Add Wi-Fi + send-to-server on top of the Wokwi sketch once protocol
+      is decided.
 - [ ] Hand simulated traffic to Aki.
 
 ## Phase B — real hardware
@@ -60,3 +64,6 @@ real traffic in Phase B before we trust any numbers.
 
 - _2026-08-08_ — Set up this planning folder. Device locked in as ESP32 +
   MAX30102. Waiting on protocol decision before starting the simulator.
+- _2026-08-13_ — First Wokwi slice working: simulated MAX30102 (stub chip,
+  I2C) -> ESP32 -> Serial. No network yet, that's next once protocol is
+  decided. See [`device/wokwi/`](../../device/wokwi).
