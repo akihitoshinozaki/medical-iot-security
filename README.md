@@ -11,19 +11,38 @@ malfunctions.
 
 ## Architecture
 
-ESP32 Medical Device
-        ↓
-Network Traffic
-        ↓
-Packet Capture
-        ↓
-Feature Extraction
-        ↓
-Anomaly Detection
-        ↓
-Alert + Explanation
-        ↓
-Dashboard
+The team works remotely through a private Tailscale network. Jun's simulated
+medical device publishes readings using MQTT to a Mosquitto broker hosted on
+Aki's computer. Aki captures and analyzes the traffic, while Toma uses the
+same authorized lab network to generate controlled attack traffic.
+
+```text
+Jun's simulated device (ESP32 later)
+        |
+        | MQTT readings
+        v
+Private Tailscale network
+        |
+        v
+Aki's computer
+  Mosquitto MQTT broker (port 1883)
+        |
+        v
+Packet/message capture
+        |
+        v
+Feature extraction -> Anomaly detection -> Alert + explanation -> Dashboard
+
+Toma's attack simulator
+        |
+        | authorized replay/injection tests
+        v
+Private Tailscale network -> Aki's MQTT broker
+```
+
+The broker is bound to Aki's private Tailscale address and requires separate
+MQTT credentials for Aki, Jun, and Toma. It is not exposed through public
+router port forwarding. All testing uses synthetic data and team-owned systems.
 
 ## Team
 

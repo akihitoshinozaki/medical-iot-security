@@ -19,3 +19,6 @@ __pycache__/
 
 # Generated artifacts
 artifacts/
+
+# Project-specific files
+ProjectBreif.md
