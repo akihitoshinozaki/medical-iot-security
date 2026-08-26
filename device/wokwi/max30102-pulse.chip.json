@@ -1,0 +1,6 @@
+{
+  "name": "max30102-pulse",
+  "author": "jun",
+  "pins": ["VCC", "GND", "SDA", "SCL"],
+  "controls": []
+}
