@@ -18,16 +18,19 @@ running, and we can swap hardware in without redoing the pipeline.
 | Send interval | 1s | proposed |
 | Payload | JSON — `{device_id, timestamp, bpm, spo2}` | proposed |
 | Payload size | ~80-120 bytes | follows from the above |
-| Protocol | HTTP POST **or** MQTT | **undecided — Aki** |
-| Destination | receiving server run by Aki | **undecided — Aki** |
+| Protocol | HTTP POST | **assumed default — needs Aki's confirmation** |
+| Destination | `device/simulator/local_test_receiver.py` for now | **placeholder — swap to Aki's real server once up** |
 
-Two open decisions, both Aki's call, and both block building the simulator.
-Once settled, this table stops being a draft and becomes the reference.
+HTTP POST was picked as a default so the simulator wasn't blocked for two
+weeks waiting on a decision — swapping to MQTT later only touches
+`send()` in [`device/simulator/simulate_device.py`](simulator/simulate_device.py),
+nothing else. Once Aki confirms (or overrides), this table stops being a
+draft and becomes the reference.
 
 ## Phases
 
-Jun is away from the hardware until roughly late August, so the device comes
-up in two stages:
+Jun is back at school and has ordered the MAX30102 (arriving in a few days),
+so the device comes up in two stages:
 
 **Phase A — simulated.** Emit contract-conformant traffic without physical
 hardware, so Aki isn't blocked for two weeks. Two options, in order of
@@ -44,6 +47,12 @@ preference:
    (random walk, 60-100 bpm, with noise) and sends them on the contract's
    interval. Not real firmware, but no external dependencies and it unblocks
    Aki immediately.
+   **Status:** done — [`device/simulator/simulate_device.py`](simulator/simulate_device.py)
+   sends real HTTP POSTs; [`device/simulator/local_test_receiver.py`](simulator/local_test_receiver.py)
+   is a throwaway endpoint to test against until Aki's real server exists.
+   Paired with the [capture/export pipeline](../capture/README.md), this is
+   enough to produce and hand off real traffic today, independent of Wokwi's
+   network-tier question or the physical board's arrival.
 
 **Phase B — real hardware.** MAX30102 wired to the ESP32, real firmware, real
 packets. The important check here is that real traffic actually matches the

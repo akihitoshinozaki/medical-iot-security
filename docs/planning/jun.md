@@ -7,9 +7,8 @@ traffic.
 
 ## Current status
 
-In Japan until roughly late August. I don't have the MAX30102 yet — buying it
-once I'm back. Rather than sit idle for two weeks and block Aki, I'm splitting
-my work in two:
+Back at school. MAX30102 ordered, arriving in a few days. Rather than sit
+idle until then, I'm splitting my work in two:
 
 - **Phase A (now):** simulate the device so it emits the same *shape* of
   traffic a real one would, and hand that to Aki so feature extraction and the
@@ -19,26 +18,33 @@ my work in two:
 
 ## Phase A — simulated device
 
-- [ ] Agree the **traffic contract** with Aki and write it into
-      [`device/README.md`](../../device/README.md): send interval, payload
-      shape and size, protocol (HTTP POST vs MQTT), destination.
-      *This is the piece that makes simulated and real traffic
-      interchangeable — everything else depends on it.*
-- [ ] Confirm Aki has a receiving server up, so packets actually cross a
-      network and are capturable.
-- [x] Build the simulated device — started with **Wokwi**
-      (wokwi.com), in [`device/wokwi/`](../../device/wokwi). Sensor is a
-      stub custom chip (not a real MAX30102 register emulation — Wokwi has
-      no built-in one), producing a 2-byte IR reading over I2C that dips
-      once per simulated heartbeat. ESP32 firmware reads it, estimates BPM,
-      prints over Serial. **No network yet** — that's the next slice, once
-      the protocol/destination below are decided.
-      - [ ] Still need to check whether Wokwi's free tier allows outbound
-            network calls from the simulated device — if not, fall back to
-            a script emulator in `device/simulator/` instead.
-- [ ] Add Wi-Fi + send-to-server on top of the Wokwi sketch once protocol
-      is decided.
-- [ ] Hand simulated traffic to Aki.
+- [x] Draft the **traffic contract** in [`device/README.md`](../../device/README.md):
+      1s interval, JSON `{device_id, timestamp, bpm, spo2}`, ~80-120 bytes.
+      Protocol defaulted to **HTTP POST** rather than waiting on Aki — still
+      needs their sign-off, but not a blocker anymore since swapping to MQTT
+      later only touches one function.
+- [x] Build the simulated device — two paths now exist:
+      - **Wokwi** (wokwi.com), in [`device/wokwi/`](../../device/wokwi). Sensor
+        is a stub custom chip (not a real MAX30102 register emulation — Wokwi
+        has no built-in one), producing a 2-byte IR reading over I2C that dips
+        once per simulated heartbeat. ESP32 firmware reads it, estimates BPM,
+        prints over Serial. **Still no network leg** — Wokwi's free-tier
+        outbound-network question is still open, and is now lower priority
+        since the script emulator below already unblocks traffic.
+      - **Script emulator**, in [`device/simulator/`](../../device/simulator).
+        `simulate_device.py` sends real HTTP POSTs with contract-shaped
+        readings; `local_test_receiver.py` is a throwaway endpoint to test
+        against. Smoke-tested locally — works end to end.
+- [x] Document the **capture/export pipeline** in
+      [`capture/README.md`](../../capture/README.md): tcpdump to `.pcap`,
+      tshark to a per-packet CSV. Same pipeline Phase B will use, so it's not
+      thrown away once real hardware arrives.
+- [ ] Confirm Aki has a receiving server up; swap `simulate_device.py --url`
+      to point at it instead of the local test receiver.
+- [ ] Run a real capture (tcpdump + tshark export) against the emulator and
+      hand the CSV to Aki so Steps 3-4 can start.
+- [ ] Add Wi-Fi + send-to-server on top of the Wokwi sketch, if it turns out
+      the network tier works and it's worth having both paths.
 
 ## Phase B — real hardware
 
@@ -51,8 +57,10 @@ my work in two:
 
 ## Blocked on
 
-- **Aki:** HTTP POST or MQTT? Blocks the simulator build.
-- **Aki:** where do I send to — what's the receiving server / endpoint?
+- **Aki:** confirm HTTP POST (or override to MQTT) — no longer blocking, just
+  needs sign-off before calling the contract final.
+- **Aki:** where do I send to — what's the receiving server / endpoint? Using
+  a local throwaway receiver until this exists.
 
 ## Notes for the team
 
@@ -67,3 +75,12 @@ real traffic in Phase B before we trust any numbers.
 - _2026-08-13_ — First Wokwi slice working: simulated MAX30102 (stub chip,
   I2C) -> ESP32 -> Serial. No network yet, that's next once protocol is
   decided. See [`device/wokwi/`](../../device/wokwi).
+- _2026-08-26_ — Back at school, MAX30102 ordered (arriving in a few days).
+  Prepping while I wait: built the script emulator
+  ([`device/simulator/`](../../device/simulator)) so there's real,
+  capturable traffic today instead of waiting on Wokwi's network tier or
+  the board. Defaulted the protocol to HTTP POST rather than staying
+  blocked on Aki. Documented the tcpdump/tshark capture-to-CSV pipeline in
+  [`capture/README.md`](../../capture/README.md) — same pipeline Phase B
+  reuses. Next: get a real capture running against the emulator and hand
+  the CSV to Aki.
