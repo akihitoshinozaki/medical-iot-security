@@ -7,6 +7,7 @@ matplotlib==3.11.1
 narwhals==2.24.0
 numpy==2.5.1
 packaging==26.3
+paho-mqtt==2.1.0
 pandas==3.0.5
 pillow==12.3.0
 pyparsing==3.3.2

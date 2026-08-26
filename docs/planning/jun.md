@@ -20,9 +20,8 @@ idle until then, I'm splitting my work in two:
 
 - [x] Draft the **traffic contract** in [`device/README.md`](../../device/README.md):
       1s interval, JSON `{device_id, timestamp, bpm, spo2}`, ~80-120 bytes.
-      Protocol defaulted to **HTTP POST** rather than waiting on Aki — still
-      needs their sign-off, but not a blocker anymore since swapping to MQTT
-      later only touches one function.
+      **Protocol confirmed by Aki: MQTT.** Broker host/port, topic name, and
+      auth/TLS still needed from Aki — see the open table in that file.
 - [x] Build the simulated device — two paths now exist:
       - **Wokwi** (wokwi.com), in [`device/wokwi/`](../../device/wokwi). Sensor
         is a stub custom chip (not a real MAX30102 register emulation — Wokwi
@@ -32,19 +31,22 @@ idle until then, I'm splitting my work in two:
         outbound-network question is still open, and is now lower priority
         since the script emulator below already unblocks traffic.
       - **Script emulator**, in [`device/simulator/`](../../device/simulator).
-        `simulate_device.py` sends real HTTP POSTs with contract-shaped
-        readings; `local_test_receiver.py` is a throwaway endpoint to test
-        against. Smoke-tested locally — works end to end.
+        `simulate_device.py` publishes real MQTT messages (`paho-mqtt`) with
+        contract-shaped readings; `local_test_subscriber.py` is a throwaway
+        subscriber to test against on a local broker. Smoke-tested against a
+        local `mosquitto` broker — works end to end.
 - [x] Document the **capture/export pipeline** in
       [`capture/README.md`](../../capture/README.md): tcpdump to `.pcap`,
-      tshark to a per-packet CSV. Same pipeline Phase B will use, so it's not
-      thrown away once real hardware arrives.
-- [ ] Confirm Aki has a receiving server up; swap `simulate_device.py --url`
-      to point at it instead of the local test receiver.
+      tshark to a per-packet CSV (now with MQTT-specific fields: topic,
+      msgtype, QoS). Same pipeline Phase B will use, so it's not thrown away
+      once real hardware arrives.
+- [ ] Get broker host/port, topic name, and auth/TLS from Aki; swap
+      `simulate_device.py`'s `--broker-host`/`--broker-port`/`--topic` to
+      point at Aki's real broker instead of the local test one.
 - [ ] Run a real capture (tcpdump + tshark export) against the emulator and
       hand the CSV to Aki so Steps 3-4 can start.
-- [ ] Add Wi-Fi + send-to-server on top of the Wokwi sketch, if it turns out
-      the network tier works and it's worth having both paths.
+- [ ] Add Wi-Fi + publish-to-broker on top of the Wokwi sketch, if it turns
+      out the network tier works and it's worth having both paths.
 
 ## Phase B — real hardware
 
@@ -57,10 +59,11 @@ idle until then, I'm splitting my work in two:
 
 ## Blocked on
 
-- **Aki:** confirm HTTP POST (or override to MQTT) — no longer blocking, just
-  needs sign-off before calling the contract final.
-- **Aki:** where do I send to — what's the receiving server / endpoint? Using
-  a local throwaway receiver until this exists.
+- **Aki:** MQTT broker host/port. Using `localhost:1883` (local test broker)
+  until this exists.
+- **Aki:** topic name to publish/subscribe to. Using
+  `devices/<device_id>/readings` as a proposed default.
+- **Aki:** does the broker need auth (username/password) or TLS?
 
 ## Notes for the team
 
@@ -79,8 +82,10 @@ real traffic in Phase B before we trust any numbers.
   Prepping while I wait: built the script emulator
   ([`device/simulator/`](../../device/simulator)) so there's real,
   capturable traffic today instead of waiting on Wokwi's network tier or
-  the board. Defaulted the protocol to HTTP POST rather than staying
-  blocked on Aki. Documented the tcpdump/tshark capture-to-CSV pipeline in
+  the board. Documented the tcpdump/tshark capture-to-CSV pipeline in
   [`capture/README.md`](../../capture/README.md) — same pipeline Phase B
-  reuses. Next: get a real capture running against the emulator and hand
-  the CSV to Aki.
+  reuses. Aki confirmed **MQTT** as the protocol; rewrote the emulator to
+  publish over MQTT (`paho-mqtt`), tested end to end against a local
+  `mosquitto` broker. Still need broker host/port, topic, and auth/TLS
+  from Aki. Next: get those, then get a real capture running against the
+  emulator and hand the CSV to Aki.
